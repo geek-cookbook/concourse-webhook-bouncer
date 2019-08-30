@@ -1,0 +1,21 @@
+server {
+    listen         80 default_server;
+    listen         [::]:80 default_server;
+
+    # Retrieve the concourse URL from the ENV variable set by the user
+    # set_by_lua $concourse_url 'return os.getenv("CONCOURSE_URL")';
+
+    # This location stanza matches the expected URL string of a concourse webhook, and passes only valid
+    # requests to the concourse backend - See https://concourse-ci.org/resources.html
+    
+    location  ~ ^/api/v1/teams/(.*)/pipelines/(.*)resources/(.*)/check/webhook(.*) {
+        resolver $RESOLVER;
+        proxy_pass   $CONCOURSE_URL/api/v1/teams/$1/pipelines/$2/resources/$3/check/webhook$4; 
+    }
+
+    # Anything else is a 403
+    location / {
+        return 403;
+    }
+}
+
